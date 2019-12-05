@@ -1,0 +1,1 @@
+tail code is copied-changed from [telegraf tail](https://github.com/influxdata/telegraf/blob/master/plugins/inputs/tail/tail.go)

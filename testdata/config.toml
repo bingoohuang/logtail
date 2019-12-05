@@ -1,0 +1,28 @@
+# files to tail.
+# These accept standard unix glob matching rules, but with the addition of
+# ** as a "super asterisk". ie:
+#   "/var/log/**.log"  -> recursively find all .log files in /var/log
+#   "/var/log/*/*.log" -> find all .log files with a parent dir in /var/log
+#   "/var/log/apache.log" -> just tail the apache log file
+#
+# See https://github.com/gobwas/glob for more examples
+Files = ["testdata/*.log"]
+# Whether file is a named pipe
+Pipe = false
+
+# 前置匹配（子串包含）
+Matches = ["[End]"]
+# POST URL
+PostURL  = "http://127.0.0.1:8812"
+
+# 匹配正则，优先级高
+Capture  = ''''''
+# 正则匹配，捕获组序号
+CaptureGroup = 0
+
+# 在Capture为空时，使用锚点定位
+
+# 锚点
+AnchorStart = '''customerVerify(..)=['''
+# 终止锚点
+AnchorEnd = ''']^_^'''

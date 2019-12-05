@@ -10,3 +10,8 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+/config.toml
+/ctl
+/var
+/.idea
+/tail/TestTailFileOffset.log
