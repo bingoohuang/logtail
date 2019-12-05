@@ -8,7 +8,7 @@ builds:
   -
     main: ./cmd/logtail/main.go
     hooks:
-      post: ./upx.sh logtail
+      post: ./upx.sh
     goarch:
       - amd64
 env:
