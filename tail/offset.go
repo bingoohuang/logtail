@@ -16,21 +16,18 @@ import (
 )
 
 // GetFileIno 获得文件的Inode值。这样，在文件被重建时（文件名不变），可以使用Inode来确定文件是否被重新创建
-func GetFileIno(file string) (ino uint64, err error) {
+func GetFileIno(file string) (uint64, error) {
 	fileinfo, err := os.Stat(file)
 	if err != nil {
-		return
+		return 0, err
 	}
 
 	stat, ok := fileinfo.Sys().(*syscall.Stat_t)
 	if !ok {
-		err = errors.New(file + " is not a syscall.Stat_t")
-		return
+		return 0, errors.New(file + " is not a syscall.Stat_t")
 	}
 
-	ino = stat.Ino
-
-	return
+	return stat.Ino, nil
 }
 
 // ReadTailFileOffset 读取tail文件对应的.offset文件记录的偏移位置

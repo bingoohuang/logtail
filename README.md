@@ -34,7 +34,7 @@ CaptureGroup = 0
 
 # 在Capture为空时，使用锚点定位
 
-# 锚点
+# 起始锚点
 AnchorStart = '''customerVerify(..)=['''
 # 终止锚点
 AnchorEnd = ''']^_^'''

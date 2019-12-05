@@ -19,7 +19,7 @@ type Liner interface {
 
 // Tail tail log files.
 type Tail struct {
-	sync.Mutex
+	mu sync.Mutex
 	wg sync.WaitGroup
 
 	Pipe bool
@@ -47,8 +47,6 @@ func NewTail(liner Liner) *Tail {
 //  ## See https://github.com/gobwas/glob for more examples
 //  ##
 //  Files = ["/var/mymetrics.out"]
-//  ## Read file from beginning.
-//  FromBeginning = false
 //  ## Whether file is a named pipe
 //  Pipe = false
 //  ## Method used to watch for file updates.  Can be either "inotify" or "poll".
@@ -56,8 +54,8 @@ func NewTail(liner Liner) *Tail {
 
 // Start starts a tail go routine.
 func (t *Tail) Start() {
-	t.Lock()
-	defer t.Unlock()
+	t.mu.Lock()
+	defer t.mu.Unlock()
 
 	t.tailers = make(map[string]*tail.Tail)
 
@@ -74,8 +72,7 @@ func (t *Tail) tailNewFiles() {
 
 		for _, file := range g.Match() {
 			if _, ok := t.tailers[file]; ok {
-				// we're already tailing this file
-				continue
+				continue // we're already tailing this file
 			}
 
 			t.createTailer(file)
@@ -131,6 +128,7 @@ ForLoop:
 			if !ok {
 				break ForLoop
 			}
+
 			if line.Err != nil {
 				logrus.Errorf("Tailing %q: %s", tailer.Filename, line.Err.Error())
 				continue
@@ -142,7 +140,6 @@ ForLoop:
 			if t.liner != nil {
 				if err := t.liner.ProcessLine(tailer, text, firstLine); err != nil {
 					logrus.Errorf("Malformed log line in %q: [%q]: %s", tailer.Filename, line.Text, err.Error())
-					continue
 				}
 			}
 
@@ -159,15 +156,13 @@ ForLoop:
 
 // Stop stops the tail goroutine.
 func (t *Tail) Stop() {
-	t.Lock()
-	defer t.Unlock()
+	t.mu.Lock()
+	defer t.mu.Unlock()
 
 	for _, tailer := range t.tailers {
 		if !t.Pipe {
 			// store offset for resume
-			offset, err := tailer.Tell()
-
-			if err == nil {
+			if offset, err := tailer.Tell(); err == nil {
 				logrus.Debugf("Recording offset %d for %q", offset, tailer.Filename)
 			} else {
 				logrus.Errorf("Recording offset for %q: %s", tailer.Filename, err.Error())
