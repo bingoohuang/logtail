@@ -3,6 +3,8 @@
 package tail
 
 import (
+	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -22,7 +24,8 @@ type Tail struct {
 	mu sync.Mutex
 	wg sync.WaitGroup
 
-	Pipe bool
+	FromBeginning bool
+	Pipe          bool
 
 	liner   Liner
 	tailers map[string]*tail.Tail
@@ -33,7 +36,7 @@ type Tail struct {
 
 // NewTail create a new tail.
 func NewTail(liner Liner) *Tail {
-	return &Tail{liner: liner}
+	return &Tail{FromBeginning: false, liner: liner}
 }
 
 // sampleConfig =
@@ -59,32 +62,48 @@ func (t *Tail) Start() {
 
 	t.tailers = make(map[string]*tail.Tail)
 
-	t.tailNewFiles()
+	t.tailNewFiles(t.FromBeginning)
 }
 
-func (t *Tail) tailNewFiles() {
+func (t *Tail) tailNewFiles(fromBeginning bool) {
+	var seek *tail.SeekInfo
+	if !t.Pipe && !t.FromBeginning {
+		seek = &tail.SeekInfo{
+			Whence: io.SeekEnd,
+			Offset: 0,
+		}
+	}
 	// Create a "tailer" for each file
 	for _, filepath := range t.Files {
+		fmt.Printf("tailer filepath:%s \n", filepath)
 		g, err := globpath.Compile(filepath)
 		if err != nil {
 			logrus.Errorf("Glob %q failed to compile: %s", filepath, err.Error())
 		}
 
 		for _, file := range g.Match() {
+			fmt.Printf("tailer filepath %s match:%s \n", filepath, file)
 			if _, ok := t.tailers[file]; ok {
 				continue // we're already tailing this file
 			}
 
-			t.createTailer(file)
+			t.createTailer(file, seek)
 		}
 	}
 }
 
-func (t *Tail) createTailer(file string) {
+func (t *Tail) createTailer(file string, seek *tail.SeekInfo) {
+	offset := ReadTailFileOffset(file, seek)
+	if offset == nil && t.FromBeginning {
+		offset = &tail.SeekInfo{
+			Whence: io.SeekCurrent,
+			Offset: 0,
+		}
+	}
 	tailConfig := tail.Config{
 		ReOpen:    true,
 		Follow:    true,
-		Location:  ReadTailFileOffset(file),
+		Location:  offset,
 		MustExist: true,
 		Poll:      t.WatchMethod == "poll",
 		Pipe:      t.Pipe,

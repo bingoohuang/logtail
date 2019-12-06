@@ -31,9 +31,7 @@ func GetFileIno(file string) (uint64, error) {
 }
 
 // ReadTailFileOffset 读取tail文件对应的.offset文件记录的偏移位置
-func ReadTailFileOffset(file string) *tail.SeekInfo {
-	fallback := &tail.SeekInfo{Whence: io.SeekStart, Offset: 0}
-
+func ReadTailFileOffset(file string, fallback *tail.SeekInfo) *tail.SeekInfo {
 	offset, err := ioutil.ReadFile(getTailerOffsetFileName(file))
 	if err != nil || offset == nil {
 		return fallback

@@ -71,8 +71,8 @@ func (p Post) ProcessLine(tailer *tail.Tail, line string, firstLine bool) error 
 }
 
 func (p Post) postLine(firstLine bool, filename, captured, line string) {
-	p.q.Add("filename", filename)
-	p.q.Add("firstLine", fmt.Sprintf("%v", firstLine))
+	//p.q.Add("filename", filename)
+	//p.q.Add("firstLine", fmt.Sprintf("%v", firstLine))
 	p.u.RawQuery = p.q.Encode()
 
 	contentType := "text/plain; charset=utf-8"
