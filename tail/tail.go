@@ -3,7 +3,6 @@
 package tail
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -24,82 +23,85 @@ type Tail struct {
 	mu sync.Mutex
 	wg sync.WaitGroup
 
-	FromBeginning bool
-	Pipe          bool
+	FromBeginning bool `pflag:"Read file from beginning"`
+	Pipe          bool `pflag:"Whether file is a named pipe"`
 
 	liner   Liner
 	tailers map[string]*tail.Tail
 
-	WatchMethod string // default "inotify"
-	Files       []string
+	WatchMethod      string   `pflag:"Method used to watch for file updates(inotify/poll), default inotify"`
+	OffsetSavePrefix string   `pflag:"Offset save file prefix in in ~, default logtail"`
+	Files            []string `pflag:"Files to tail"`
 }
 
 // NewTail create a new tail.
 func NewTail(liner Liner) *Tail {
-	return &Tail{FromBeginning: false, liner: liner}
+	return &Tail{FromBeginning: false, liner: liner, OffsetSavePrefix: "logtail"}
 }
 
 // sampleConfig =
-//  ## files to tail.
-//  ## These accept standard unix glob matching rules, but with the addition of
-//  ## ** as a "super asterisk". ie:
-//  ##   "/var/log/**.log"  -> recursively find all .log files in /var/log
-//  ##   "/var/log/*/*.log" -> find all .log files with a parent dir in /var/log
-//  ##   "/var/log/apache.log" -> just tail the apache log file
-//  ##
-//  ## See https://github.com/gobwas/glob for more examples
-//  ##
+//  # files to tail.
+//  # These accept standard unix glob matching rules, but with the addition of
+//  # ** as a "super asterisk". ie:
+//  #   "/var/log/**.log"  -> recursively find all .log files in /var/log
+//  #   "/var/log/*/*.log" -> find all .log files with a parent dir in /var/log
+//  #   "/var/log/apache.log" -> just tail the apache log file
+//  #
+//  # See https://github.com/gobwas/glob for more examples
+//  #
 //  Files = ["/var/mymetrics.out"]
-//  ## Whether file is a named pipe
+//  # Read file from beginning.
+//  FromBeginning = false
+//  # Whether file is a named pipe
 //  Pipe = false
-//  ## Method used to watch for file updates.  Can be either "inotify" or "poll".
+//  # Method used to watch for file updates.  Can be either "inotify" or "poll".
 //  # WatchMethod = "inotify"
 
 // Start starts a tail go routine.
 func (t *Tail) Start() {
+	if len(t.Files) == 0 {
+		logrus.Panicf("no files to tail")
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	t.tailers = make(map[string]*tail.Tail)
 
-	t.tailNewFiles(t.FromBeginning)
+	t.tailNewFiles()
 }
 
-func (t *Tail) tailNewFiles(fromBeginning bool) {
-	var seek *tail.SeekInfo
-	if !t.Pipe && !t.FromBeginning {
-		seek = &tail.SeekInfo{
-			Whence: io.SeekEnd,
-			Offset: 0,
-		}
-	}
+func (t *Tail) tailNewFiles() {
 	// Create a "tailer" for each file
 	for _, filepath := range t.Files {
-		fmt.Printf("tailer filepath:%s \n", filepath)
+		logrus.Infof("tailer filepath %s", filepath)
+
 		g, err := globpath.Compile(filepath)
 		if err != nil {
 			logrus.Errorf("Glob %q failed to compile: %s", filepath, err.Error())
 		}
 
 		for _, file := range g.Match() {
-			fmt.Printf("tailer filepath %s match:%s \n", filepath, file)
+			logrus.Infof("tailer filepath %s match %s", filepath, file)
+
 			if _, ok := t.tailers[file]; ok {
 				continue // we're already tailing this file
 			}
 
-			t.createTailer(file, seek)
+			t.createTailer(file)
 		}
 	}
 }
 
-func (t *Tail) createTailer(file string, seek *tail.SeekInfo) {
-	offset := ReadTailFileOffset(file, seek)
-	if offset == nil && t.FromBeginning {
-		offset = &tail.SeekInfo{
-			Whence: io.SeekCurrent,
-			Offset: 0,
+func (t *Tail) createTailer(file string) {
+	var offset *tail.SeekInfo
+	if !t.Pipe {
+		offset = &tail.SeekInfo{Whence: io.SeekStart, Offset: 0}
+		if !t.FromBeginning {
+			offset, _ = ReadTailFileOffset(t.OffsetSavePrefix, file, offset)
 		}
 	}
+
 	tailConfig := tail.Config{
 		ReOpen:    true,
 		Follow:    true,
@@ -141,7 +143,7 @@ ForLoop:
 	for {
 		select {
 		case <-ticker.C:
-			offset := SaveTailerOffset(tailer)
+			offset := SaveTailerOffset(t.OffsetSavePrefix, tailer)
 			logrus.Debugf("SaveTailerOffset %s, offset:%d", tailer.Filename, offset)
 		case line, ok := <-tailer.Lines:
 			if !ok {
@@ -179,16 +181,16 @@ func (t *Tail) Stop() {
 	defer t.mu.Unlock()
 
 	for _, tailer := range t.tailers {
-		if !t.Pipe {
+		if !t.Pipe && !t.FromBeginning {
 			// store offset for resume
 			if offset, err := tailer.Tell(); err == nil {
 				logrus.Debugf("Recording offset %d for %q", offset, tailer.Filename)
 			} else {
 				logrus.Errorf("Recording offset for %q: %s", tailer.Filename, err.Error())
 			}
-		}
 
-		SaveTailerOffset(tailer)
+			SaveTailerOffset(t.OffsetSavePrefix, tailer)
+		}
 
 		if err := tailer.Stop(); err != nil {
 			logrus.Errorf("Stopping tail on %q: %s", tailer.Filename, err.Error())

@@ -17,3 +17,4 @@
 /tail/TestTailFileOffset.log
 /dist/
 /logtail
+/cnf.toml

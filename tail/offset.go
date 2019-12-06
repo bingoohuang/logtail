@@ -31,37 +31,38 @@ func GetFileIno(file string) (uint64, error) {
 }
 
 // ReadTailFileOffset 读取tail文件对应的.offset文件记录的偏移位置
-func ReadTailFileOffset(file string, fallback *tail.SeekInfo) *tail.SeekInfo {
-	offset, err := ioutil.ReadFile(getTailerOffsetFileName(file))
-	if err != nil || offset == nil {
-		return fallback
+func ReadTailFileOffset(prefix, file string, fallback *tail.SeekInfo) (*tail.SeekInfo, error) {
+	offset, err := ioutil.ReadFile(getTailerOffsetFileName(prefix, file))
+	if err != nil {
+		return fallback, err
 	}
 
-	if off, err := strconv.ParseInt(string(offset), 10, 64); err == nil {
-		return &tail.SeekInfo{Whence: io.SeekStart, Offset: off}
+	off, err := strconv.ParseInt(string(offset), 10, 64)
+	if err != nil {
+		return fallback, err
 	}
 
-	return fallback
+	return &tail.SeekInfo{Whence: io.SeekStart, Offset: off}, nil
 }
 
 // SaveTailerOffset 保存tail文件读取的位置到对应的.offset文件
-func SaveTailerOffset(tailer *tail.Tail) int64 {
+func SaveTailerOffset(prefix string, tailer *tail.Tail) int64 {
 	offset, _ := tailer.Tell()
 	b := []byte(strconv.FormatInt(offset, 10))
-	_ = ioutil.WriteFile(getTailerOffsetFileName(tailer.Filename), b, 0644)
+	_ = ioutil.WriteFile(getTailerOffsetFileName(prefix, tailer.Filename), b, 0644)
 
 	return offset
 }
 
 // ClearTailerOffset 删除tail文件对应的.offset文件
-func ClearTailerOffset(tailer *tail.Tail) {
-	_ = os.Remove(getTailerOffsetFileName(tailer.Filename))
+func ClearTailerOffset(prefix string, tailer *tail.Tail) {
+	_ = os.Remove(getTailerOffsetFileName(prefix, tailer.Filename))
 }
 
 // getTailerOffsetFileName 获得tail文件对应的.offset文件名称
-func getTailerOffsetFileName(file string) string {
+func getTailerOffsetFileName(prefix, file string) string {
 	executable, _ := os.Executable()
-	dir, _ := homedir.Expand("~/.logtail-" + filepath.Base(executable) + "/tailoffset/")
+	dir, _ := homedir.Expand("~/." + prefix + "-" + filepath.Base(executable) + "/tailoffset/")
 	_ = os.MkdirAll(dir, os.ModePerm)
 
 	ino, err := GetFileIno(file)

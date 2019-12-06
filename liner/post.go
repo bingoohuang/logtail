@@ -15,27 +15,26 @@ import (
 
 // Post process line and then POST it out
 type Post struct {
-	Matches []string // 前置匹配（子串包含）
-	PostURL string   // POST url
+	Matches []string `pflag:"前置匹配（子串包含）"`
+	PostURL string   `pflag:"POST URL"`
 
-	Capture      string // 匹配正则，优先级高
-	CaptureGroup int    // 捕获组序号
+	Capture      string `pflag:"匹配正则"` // 优先级比锚点高
+	CaptureGroup int    `pflag:"捕获组序号"`
 
-	// 在Capture为空时，使用锚点定位
-	AnchorStart string // 起始锚点
-	AnchorEnd   string // 终止锚点
+	AnchorStart string `pflag:"起始锚点（在Capture为空时有效）"`
+	AnchorEnd   string `pflag:"终止锚点（在Capture为空时有效）"`
 
 	client     *http.Client
-	u          *url.URL
-	q          url.Values
+	postURL    *url.URL
+	urlQuery   url.Values
 	captureReg *regexp.Regexp
 }
 
 // Setup setup the Post p.
 func (p *Post) Setup() error {
 	if p.PostURL != "" {
-		p.u, _ = url.Parse(p.PostURL)
-		p.q, _ = url.ParseQuery(p.u.RawQuery)
+		p.postURL, _ = url.Parse(p.PostURL)
+		p.urlQuery, _ = url.ParseQuery(p.postURL.RawQuery)
 		p.client = &http.Client{
 			Timeout: 60 * time.Second,
 		}
@@ -70,20 +69,27 @@ func (p Post) ProcessLine(tailer *tail.Tail, line string, firstLine bool) error 
 	return nil
 }
 
+// CloneURLValues clones an url.Values
+func CloneURLValues(v url.Values) url.Values {
+	// copy from https://golang.org/src/net/http/clone.go
+	// http.Header and url.Values have the same representation, so temporarily
+	// treat it like http.Header, which does have a clone
+	return url.Values(http.Header(v).Clone())
+}
+
 func (p Post) postLine(firstLine bool, filename, captured, line string) {
-	//p.q.Add("filename", filename)
-	//p.q.Add("firstLine", fmt.Sprintf("%v", firstLine))
-	p.u.RawQuery = p.q.Encode()
+	q := CloneURLValues(p.urlQuery)
+	q.Add("filename", filename)
+	q.Add("firstLine", fmt.Sprintf("%v", firstLine))
 
-	contentType := "text/plain; charset=utf-8"
-	firstByte := captured[0]
+	u := p.postURL
+	u.RawQuery = q.Encode()
 
-	if firstByte == '{' || firstByte == '[' {
-		contentType = "application/json; charset=utf-8"
-	}
-
+	contentType := DetectContentType(captured)
 	start := time.Now()
-	resp, err := p.client.Post(p.u.String(), contentType, strings.NewReader(captured)) // nolint
+	postURL := u.String()
+	logrus.Infof("postURL %s", postURL)
+	resp, err := p.client.Post(postURL, contentType, strings.NewReader(captured)) // nolint
 
 	if err != nil {
 		logrus.Warnf("post: %s for line: %s error %+v", captured, line, err)
@@ -94,6 +100,15 @@ func (p Post) postLine(firstLine bool, filename, captured, line string) {
 	respBody := gonet.ReadString(resp.Body)
 	logrus.Infof("post: %s cost: %v status: %s response: %s for line: %s",
 		captured, time.Since(start), status, respBody, line)
+}
+
+func DetectContentType(body string) string {
+	switch body[0] {
+	case '{', '[':
+		return "application/json; charset=utf-8"
+	default:
+		return "text/plain; charset=utf-8"
+	}
 }
 
 func (p Post) matches(line string) bool {

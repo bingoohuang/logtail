@@ -21,11 +21,12 @@ func TestTailFileOffset(t *testing.T) {
 	f, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	a.Nil(err, "打开文件成功")
 
+	offset, _ := ReadTailFileOffset("test", file, nil)
 	tailer, err := tail.TailFile(file,
 		tail.Config{
 			ReOpen:    true,
 			Follow:    true,
-			Location:  ReadTailFileOffset(file),
+			Location:  offset,
 			MustExist: true,
 		})
 	a.Nil(err, "Tail文件成功")
@@ -41,5 +42,5 @@ func TestTailFileOffset(t *testing.T) {
 		a.Fail("没有读到消息")
 	}
 
-	SaveTailerOffset(tailer)
+	SaveTailerOffset("test", tailer)
 }

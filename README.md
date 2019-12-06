@@ -7,7 +7,7 @@ tail log and do something
 
 ## Usage
 
-demo [config.toml](testdata/config.toml)
+demo [config.toml](testdata/cnf.toml)
 
 ```toml
 # files to tail.
@@ -63,20 +63,21 @@ logtail started, pid=86594
 
 ```bash
 $ logtail -h
- Usage of logtail:
-       --anchorEnd string
-       --anchorStart string
-       --capture string
-       --captureGroup int
-   -c, --cnf string           cnf file path
-       --files string
-   -i, --init                 init to create template config file and ctl.sh
-       --logdir string        log dir (default "var/logs")
-       --loglevel string      debug/info/warn/error (default "info")
-       --matches string
-       --pipe
-       --postURL string
-   -v, --version              show version
-       --watchMethod string
- pflag: help requested
+Usage of logtail:
+      --anchorEnd string          终止锚点（在Capture为空时有效）
+      --anchorStart string        起始锚点（在Capture为空时有效）
+      --capture string            匹配正则
+      --captureGroup int          捕获组序号
+  -c, --cnf string                cnf file path
+      --files string              Files to tail
+      --fromBeginning             Read file from beginning
+  -i, --init                      init to create template config file and ctl.sh
+      --logdir string             log dir (default "var/logs")
+      --loglevel string           debug/info/warn/error (default "info")
+      --matches string            前置匹配（子串包含）
+      --offsetSavePrefix string   Offset save file prefix in in ~, default logtail
+      --pipe                      Whether file is a named pipe
+      --postURL string            POST URL
+  -v, --version                   show version
+      --watchMethod string        Method used to watch for file updates(inotify/poll), default inotify
 ```

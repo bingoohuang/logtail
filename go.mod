@@ -6,7 +6,7 @@ require (
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61
 	github.com/bingoohuang/gonet v0.0.0-20191202012958-3500a89712c0
 	github.com/bingoohuang/gossh v0.0.0-20191205101703-31be759945cc
-	github.com/bingoohuang/gostarter v0.0.0-20191205113530-b4614c6c6966
+	github.com/bingoohuang/gostarter v0.0.0-20191206120625-98e6c1459654
 	github.com/bingoohuang/gou v0.0.0-20190724062522-59c35e658334
 	github.com/bingoohuang/statiq v0.2.1
 	github.com/gobwas/glob v0.2.3

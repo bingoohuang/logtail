@@ -53,9 +53,7 @@ func main() {
 
 	done := make(chan bool, 1)
 
-	startSignal(done, func() {
-		tailer.Stop()
-	})
+	startSignal(done, func() { tailer.Stop() })
 
 	<-done
 	fmt.Println("exiting")

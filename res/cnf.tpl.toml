@@ -7,6 +7,8 @@
 #
 # See https://github.com/gobwas/glob for more examples
 Files = ["testdata/*.log"]
+# Read file from beginning.
+FromBeginning = false
 # Whether file is a named pipe
 Pipe = false
 
