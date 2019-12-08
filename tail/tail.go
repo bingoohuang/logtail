@@ -59,29 +59,29 @@ func NewTail(liner Liner) *Tail {
 
 // Start starts a tail go routine.
 func (t *Tail) Start() {
-	if len(t.Files) == 0 {
-		logrus.Panicf("no files to tail")
-	}
-
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	t.tailers = make(map[string]*tail.Tail)
-
 	t.tailNewFiles()
+
+	if len(t.tailers) == 0 {
+		logrus.Panicf("no files to tail")
+	}
 }
 
 func (t *Tail) tailNewFiles() {
 	// Create a "tailer" for each file
 	for _, filepath := range t.Files {
-		logrus.Infof("tailer filepath %s", filepath)
-
 		g, err := globpath.Compile(filepath)
 		if err != nil {
 			logrus.Errorf("Glob %q failed to compile: %s", filepath, err.Error())
 		}
 
-		for _, file := range g.Match() {
+		matches := g.Match()
+		logrus.Infof("tailer filepath %s matches %v", filepath, matches)
+
+		for _, file := range matches {
 			logrus.Infof("tailer filepath %s match %s", filepath, file)
 
 			if _, ok := t.tailers[file]; ok {
@@ -139,12 +139,17 @@ func (t *Tail) receiver(tailer *tail.Tail) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
+	var offset int64 = -1
+
 ForLoop:
 	for {
 		select {
 		case <-ticker.C:
-			offset := SaveTailerOffset(t.OffsetSavePrefix, tailer)
-			logrus.Debugf("SaveTailerOffset %s, offset:%d", tailer.Filename, offset)
+			offsetChanged := false
+			offset, offsetChanged = SaveTailerOffset(t.OffsetSavePrefix, tailer, offset)
+			if offsetChanged {
+				logrus.Debugf("Recording offset %d for %q", offset, tailer.Filename)
+			}
 		case line, ok := <-tailer.Lines:
 			if !ok {
 				break ForLoop
@@ -189,7 +194,7 @@ func (t *Tail) Stop() {
 				logrus.Errorf("Recording offset for %q: %s", tailer.Filename, err.Error())
 			}
 
-			SaveTailerOffset(t.OffsetSavePrefix, tailer)
+			SaveTailerOffset(t.OffsetSavePrefix, tailer, -1)
 		}
 
 		if err := tailer.Stop(); err != nil {

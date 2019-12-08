@@ -19,6 +19,8 @@ demo [config.toml](testdata/cnf.toml)
 #
 # See https://github.com/gobwas/glob for more examples
 Files = ["testdata/*.log"]
+# Read file from beginning.
+FromBeginning = false
 # Whether file is a named pipe
 Pipe = false
 
@@ -74,10 +76,18 @@ Usage of logtail:
   -i, --init                      init to create template config file and ctl.sh
       --logdir string             log dir (default "var/logs")
       --loglevel string           debug/info/warn/error (default "info")
+      --logrus                    enable logrus (default true)
       --matches string            前置匹配（子串包含）
       --offsetSavePrefix string   Offset save file prefix in in ~, default logtail
       --pipe                      Whether file is a named pipe
       --postURL string            POST URL
   -v, --version                   show version
       --watchMethod string        Method used to watch for file updates(inotify/poll), default inotify
+pflag: help requested
 ```
+
+
+## References
+
+1. http://httpbin.org/ This is a simple HTTP Request & Response Service
+1. https://jsonplaceholder.typicode.com A placeholder website to invoke REST APIs

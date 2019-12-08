@@ -16,15 +16,20 @@ import (
 func DeclareLogPFlags() {
 	pflag.StringP("loglevel", "", "info", "debug/info/warn/error")
 	pflag.StringP("logdir", "", "var/logs", "log dir")
+	pflag.BoolP("logrus", "", true, "enable logrus")
 }
 
 // SetupLog setup log parameters.
 func SetupLog() io.Writer {
+	if !viper.GetBool("logrus") {
+		logrus.SetLevel(logrus.DebugLevel)
+		return os.Stdout
+	}
+
 	logdir := viper.GetString("logdir")
 	if logdir != "" {
 		if err := os.MkdirAll(logdir, os.ModePerm); err != nil {
 			logrus.Panicf("failed to create %s error %v\n", logdir, err)
-			return os.Stdout
 		}
 
 		loglevel := viper.GetString("loglevel")

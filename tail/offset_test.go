@@ -42,5 +42,5 @@ func TestTailFileOffset(t *testing.T) {
 		a.Fail("没有读到消息")
 	}
 
-	SaveTailerOffset("test", tailer)
+	SaveTailerOffset("test", tailer, -1)
 }

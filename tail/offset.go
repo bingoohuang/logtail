@@ -46,12 +46,16 @@ func ReadTailFileOffset(prefix, file string, fallback *tail.SeekInfo) (*tail.See
 }
 
 // SaveTailerOffset 保存tail文件读取的位置到对应的.offset文件
-func SaveTailerOffset(prefix string, tailer *tail.Tail) int64 {
-	offset, _ := tailer.Tell()
+func SaveTailerOffset(prefix string, tailer *tail.Tail, lastOffset int64) (offset int64, changed bool) {
+	offset, _ = tailer.Tell()
+	if lastOffset == offset {
+		return offset, false
+	}
+
 	b := []byte(strconv.FormatInt(offset, 10))
 	_ = ioutil.WriteFile(getTailerOffsetFileName(prefix, tailer.Filename), b, 0644)
 
-	return offset
+	return offset, true
 }
 
 // ClearTailerOffset 删除tail文件对应的.offset文件

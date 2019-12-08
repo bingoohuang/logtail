@@ -98,8 +98,9 @@ func (p Post) postLine(firstLine bool, filename, captured, line string) {
 
 	status := resp.Status
 	respBody := gonet.ReadString(resp.Body)
-	logrus.Infof("post: %s cost: %v status: %s response: %s for line: %s",
-		captured, time.Since(start), status, respBody, line)
+
+	logrus.Infof("original line: %s", line)
+	logrus.Infof("post: %s cost: %v status: %s response: %s", captured, time.Since(start), status, respBody)
 }
 
 func DetectContentType(body string) string {
