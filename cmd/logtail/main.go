@@ -6,13 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/bingoohuang/gossh/cnf"
 	gsutil "github.com/bingoohuang/gostarter/util"
 	"github.com/bingoohuang/logtail/liner"
 	"github.com/bingoohuang/logtail/tail"
-	"github.com/bingoohuang/logtail/util"
 	"github.com/spf13/pflag"
 
 	_ "github.com/bingoohuang/logtail/statiq"
@@ -28,7 +25,7 @@ func main() {
 
 	cnf.DeclarePflags()
 	cnf.DeclarePflagsByStruct(tailer, linerPost)
-	util.DeclareLogPFlags()
+	gsutil.DeclareLogPFlags()
 
 	if err := cnf.ParsePflags("LOGTAIL"); err != nil {
 		panic(err)
@@ -43,7 +40,7 @@ func main() {
 
 	cnf.LoadByPflag(&tailer, &linerPost)
 
-	logrus.SetOutput(util.SetupLog())
+	gsutil.SetupLog()
 
 	if err := linerPost.Setup(); err != nil {
 		panic(err)

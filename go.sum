@@ -25,8 +25,8 @@ github.com/bingoohuang/goreflect v0.0.0-20190712052741-f9e6d0b5f7fd h1:horohKpjO
 github.com/bingoohuang/goreflect v0.0.0-20190712052741-f9e6d0b5f7fd/go.mod h1:rga5AtVf7Npiv04XZxTsd8LC4/VyEHr+sn4Vt1jWPNE=
 github.com/bingoohuang/gossh v0.0.0-20191205101703-31be759945cc h1:nQ9Bj3nEe8xf3PDLhUlvU4aXg/+bvSg9sBO5UQ10rsg=
 github.com/bingoohuang/gossh v0.0.0-20191205101703-31be759945cc/go.mod h1:NjDrIFc0ZE5/cJMBsCDoLarB0DclgLJi/9EPuc3uJOY=
-github.com/bingoohuang/gostarter v0.0.0-20191206120625-98e6c1459654 h1:zVJA3mE2GpafsD4681VcEfSi+66cpS5AMSQtKQk+CRw=
-github.com/bingoohuang/gostarter v0.0.0-20191206120625-98e6c1459654/go.mod h1:vfehuSkXZApxlq8bcjxeFuY63BqYoZkee2EVzdJ4W5Y=
+github.com/bingoohuang/gostarter v0.0.0-20191209034942-017531641a3a h1:HnXxy7zUiFRjOpmiCp2fEl1A8rx7+awoK6GZ6VkRMmo=
+github.com/bingoohuang/gostarter v0.0.0-20191209034942-017531641a3a/go.mod h1:vfehuSkXZApxlq8bcjxeFuY63BqYoZkee2EVzdJ4W5Y=
 github.com/bingoohuang/gou v0.0.0-20190724062522-59c35e658334 h1:iylmmFpBCcua3COQtceWDnbEr5mu57jFowGpEXV/jX0=
 github.com/bingoohuang/gou v0.0.0-20190724062522-59c35e658334/go.mod h1:IwDSBuQaCMAmPkxq4/bmaJSaJTBLa+kbU9K9VEOWxEU=
 github.com/bingoohuang/now v0.0.0-20190604094221-3e973286dd2a/go.mod h1:SZou0n15kP/Z3Vq8lyuH59ML96lepeGzInZw0+KCFw4=
