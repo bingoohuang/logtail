@@ -18,6 +18,7 @@ type Post struct {
 	PostURL string `pflag:"POST URL"`
 
 	capture.Config
+
 	client   *http.Client
 	postURL  *url.URL
 	urlQuery url.Values
@@ -31,6 +32,8 @@ func (p *Post) Setup() error {
 		p.client = &http.Client{
 			Timeout: 60 * time.Second,
 		}
+	} else {
+		logrus.Warnf("PostURL is blank")
 	}
 
 	return p.Config.Setup()
@@ -40,11 +43,11 @@ func (p *Post) Setup() error {
 func (p Post) ProcessLine(tailer *tail.Tail, line string, firstLine bool) error {
 	captured, err := p.CaptureString(line)
 	if err != nil || captured == "" {
+		logrus.Debugf("no capture for line %s error %v", line, err)
 		return nil
 	}
 
-	logrus.Infof("line %v", line)
-	logrus.Infof("captured %v", captured)
+	logrus.Infof("captured %s from line %s", captured, line)
 
 	if p.PostURL != "" {
 		p.postLine(captured)
