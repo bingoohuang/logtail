@@ -6,6 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/bingoohuang/gossh"
+
+	"github.com/sirupsen/logrus"
+
 	"github.com/bingoohuang/gossh/cnf"
 	gsutil "github.com/bingoohuang/gostarter/util"
 	"github.com/bingoohuang/logtail/liner"
@@ -46,6 +50,9 @@ func main() {
 		panic(err)
 	}
 
+	logrus.Infof("tailer config %s", gossh.JSONCompact(tailer))
+	logrus.Infof("linerPost config %s", gossh.JSONCompact(linerPost))
+
 	go tailer.Start()
 
 	done := make(chan bool, 1)
@@ -53,7 +60,7 @@ func main() {
 	startSignal(done, func() { tailer.Stop() })
 
 	<-done
-	fmt.Println("exiting")
+	logrus.Infof("exiting")
 }
 
 func startSignal(done chan bool, f func()) {
@@ -70,8 +77,7 @@ func startSignal(done chan bool, f func()) {
 	// and then notify the program that it can finish.
 	go func() {
 		sig := <-sigs
-		fmt.Println()
-		fmt.Println(sig)
+		logrus.Infof("got signal %v", sig)
 		f()
 		done <- true
 	}()
@@ -79,5 +85,5 @@ func startSignal(done chan bool, f func()) {
 	// The program will wait here until it gets the
 	// expected signal (as indicated by the goroutine
 	// above sending a value on `done`) and then exit.
-	fmt.Println("awaiting signal")
+	logrus.Infof("awaiting signal interrupt(ctl+c) or terminated(by kill)")
 }
