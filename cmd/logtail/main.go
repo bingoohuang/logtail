@@ -6,11 +6,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/bingoohuang/gossh"
+	"github.com/bingoohuang/gou/cnf"
+	"github.com/bingoohuang/gou/enc"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/bingoohuang/gossh/cnf"
 	gsutil "github.com/bingoohuang/gostarter/util"
 	"github.com/bingoohuang/logtail/liner"
 	"github.com/bingoohuang/logtail/tail"
@@ -50,8 +50,8 @@ func main() {
 		panic(err)
 	}
 
-	logrus.Infof("tailer config %s", gossh.JSONCompact(tailer))
-	logrus.Infof("linerPost config %s", gossh.JSONCompact(linerPost))
+	logrus.Infof("tailer config %s", enc.JSONCompact(tailer))
+	logrus.Infof("linerPost config %s", enc.JSONCompact(linerPost))
 
 	go tailer.Start()
 
