@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/bingoohuang/gou/lo"
+
 	"github.com/bingoohuang/gou/cnf"
 	"github.com/bingoohuang/gou/enc"
 
@@ -29,7 +31,7 @@ func main() {
 
 	cnf.DeclarePflags()
 	cnf.DeclarePflagsByStruct(tailer, linerPost)
-	gsutil.DeclareLogPFlags()
+	lo.DeclareLogPFlags()
 
 	if err := cnf.ParsePflags("LOGTAIL"); err != nil {
 		panic(err)
@@ -44,7 +46,7 @@ func main() {
 
 	cnf.LoadByPflag(&tailer, &linerPost)
 
-	gsutil.SetupLog()
+	lo.SetupLog()
 
 	if err := linerPost.Setup(); err != nil {
 		panic(err)
