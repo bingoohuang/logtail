@@ -25,6 +25,8 @@ github.com/bingoohuang/gostarter v0.0.0-20191212065352-022cfb8852cf h1:csslSsFnq
 github.com/bingoohuang/gostarter v0.0.0-20191212065352-022cfb8852cf/go.mod h1:giPawsRGscryjP2V4bZinMOks4Y/eLTbnlsXAv4q/qw=
 github.com/bingoohuang/gou v0.0.0-20191212064525-3e38909f0ca8 h1:p6Lc9vzJ5bSO9OdXrVNW5/iUyR3g5ZfOtwdoPGeVr6c=
 github.com/bingoohuang/gou v0.0.0-20191212064525-3e38909f0ca8/go.mod h1:jyyu/57Psqg6/btyBwAT6E9dTgs5lfoHdqcQwD96uVU=
+github.com/bingoohuang/gou v0.0.0-20191212070132-501baed7c024 h1:xXpRxHyNA683HLhiVdkOd95O8wbrm5xRJdtpGvehA1k=
+github.com/bingoohuang/gou v0.0.0-20191212070132-501baed7c024/go.mod h1:jyyu/57Psqg6/btyBwAT6E9dTgs5lfoHdqcQwD96uVU=
 github.com/bingoohuang/now v0.0.0-20190715150822-ba8e4a91e3d9 h1:Vt2Thh26NzWFYfLcH65bEiDe9RrkM1VxOfvbRwTxG5U=
 github.com/bingoohuang/now v0.0.0-20190715150822-ba8e4a91e3d9/go.mod h1:SZou0n15kP/Z3Vq8lyuH59ML96lepeGzInZw0+KCFw4=
 github.com/bingoohuang/statiq v0.2.1 h1:L7Uya0pM+wbw4CYkF9DVMJ0h0aSUx4mb0X7udk/M7NA=
