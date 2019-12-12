@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mitchellh/go-homedir"
+
 	"github.com/bingoohuang/logtail/internal/globpath"
 	"github.com/influxdata/tail"
 	"github.com/sirupsen/logrus"
@@ -73,6 +75,10 @@ func (t *Tail) Start() {
 func (t *Tail) tailNewFiles() {
 	// Create a "tailer" for each file
 	for _, filepath := range t.Files {
+		if src, err := homedir.Expand(filepath); err == nil {
+			filepath = src
+		}
+
 		g, err := globpath.Compile(filepath)
 		if err != nil {
 			logrus.Errorf("Glob %q failed to compile: %s", filepath, err.Error())
