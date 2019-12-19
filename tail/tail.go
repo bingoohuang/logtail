@@ -41,6 +41,15 @@ func NewTail(liner Liner) *Tail {
 	return &Tail{FromBeginning: false, liner: liner, OffsetSavePrefix: "logtail"}
 }
 
+// every 10 seconds
+func (t *Tail) Gather() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	// always start from the beginning of files that appear while we're running
+	t.tailNewFiles(true)
+}
+
 // sampleConfig =
 //  # files to tail.
 //  # These accept standard unix glob matching rules, but with the addition of
@@ -65,14 +74,14 @@ func (t *Tail) Start() {
 	defer t.mu.Unlock()
 
 	t.tailers = make(map[string]*tail.Tail)
-	t.tailNewFiles()
+	t.tailNewFiles(t.FromBeginning)
 
 	if len(t.tailers) == 0 {
-		logrus.Panicf("no files to tail")
+		logrus.Warnf("no files to tail")
 	}
 }
 
-func (t *Tail) tailNewFiles() {
+func (t *Tail) tailNewFiles(fromBeginning bool) {
 	// Create a "tailer" for each file
 	for _, filepath := range t.Files {
 		if src, err := homedir.Expand(filepath); err == nil {
@@ -94,16 +103,16 @@ func (t *Tail) tailNewFiles() {
 				continue // we're already tailing this file
 			}
 
-			t.createTailer(file)
+			t.createTailer(file, fromBeginning)
 		}
 	}
 }
 
-func (t *Tail) createTailer(file string) {
+func (t *Tail) createTailer(file string, fromBeginning bool) {
 	var offset *tail.SeekInfo
 	if !t.Pipe {
 		offset = &tail.SeekInfo{Whence: io.SeekStart, Offset: 0}
-		if !t.FromBeginning {
+		if !fromBeginning {
 			offset, _ = ReadTailFileOffset(t.OffsetSavePrefix, file, offset)
 		}
 	}

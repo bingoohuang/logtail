@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bingoohuang/gou/lo"
 	"github.com/bingoohuang/gou/sy"
@@ -53,7 +54,15 @@ func main() {
 	logrus.Infof("tailer config %s", enc.JSONCompact(tailer))
 	logrus.Infof("linerPost config %s", enc.JSONCompact(linerPost))
 
-	go tailer.Start()
+	tailer.Start()
+
+	timer1 := time.NewTimer(10 * time.Second)
+
+	go func() {
+		for range timer1.C {
+			tailer.Gather()
+		}
+	}()
 
 	done := make(chan bool, 1)
 
