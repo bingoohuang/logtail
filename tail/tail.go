@@ -41,7 +41,7 @@ func NewTail(liner Liner) *Tail {
 	return &Tail{FromBeginning: false, liner: liner, OffsetSavePrefix: "logtail"}
 }
 
-// every 10 seconds
+// Gather gathers new files every 10 seconds
 func (t *Tail) Gather() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -154,15 +154,14 @@ func (t *Tail) receiver(tailer *tail.Tail) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
-	var offset int64 = -1
+	var lastOffset int64 = -1
 
 ForLoop:
 	for {
 		select {
 		case <-ticker.C:
-			offsetChanged := false
-			offset, offsetChanged = SaveTailerOffset(t.OffsetSavePrefix, tailer, offset)
-			if offsetChanged {
+			if offset, offsetChanged := SaveTailerOffset(t.OffsetSavePrefix, tailer, lastOffset); offsetChanged {
+				lastOffset = offset
 				logrus.Debugf("Recording offset %d for %q", offset, tailer.Filename)
 			}
 		case line, ok := <-tailer.Lines:

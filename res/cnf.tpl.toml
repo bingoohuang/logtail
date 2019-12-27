@@ -11,20 +11,24 @@ Files = ["testdata/*.log"]
 FromBeginning = false
 # Whether file is a named pipe
 Pipe = false
+# WatchMethod inotify/poll
+WatchMethod = "inotify"
+# OffsetSavePrefix logtail
+OffsetSavePrefix = "logtail"
 
 # 前置匹配（子串包含）
-Matches = ["[End]"]
+Matches = []
 # POST URL
-PostURL  = "http://127.0.0.1:8812"
+# PostURL  = "http://127.0.0.1:8812"
 
 # 匹配正则，优先级高
-Capture  = ''''''
+Capture  = ""
 # 正则匹配，捕获组序号
 CaptureGroup = 0
 
 # 在Capture为空时，使用锚点定位
 
 # 起始锚点
-AnchorStart = '''customerVerify(..)=['''
+AnchorStart = ""
 # 终止锚点
-AnchorEnd = ''']^_^'''
+AnchorEnd = ""

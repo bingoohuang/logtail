@@ -9,7 +9,7 @@ require (
 	github.com/bingoohuang/gou v0.0.0-20191212070132-501baed7c024
 	github.com/bingoohuang/statiq v0.2.1
 	github.com/gobwas/glob v0.2.3
-	github.com/influxdata/tail v1.0.0
+	github.com/influxdata/tail v1.0.1-0.20180327235535-c43482518d41
 	github.com/karrick/godirwalk v1.13.2
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lestrrat-go/strftime v1.0.0 // indirect

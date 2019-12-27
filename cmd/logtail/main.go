@@ -37,7 +37,7 @@ func main() {
 	}
 
 	if *ver {
-		fmt.Println("Version: v0.2.2")
+		fmt.Println("Version: v0.2.3")
 		return
 	}
 
