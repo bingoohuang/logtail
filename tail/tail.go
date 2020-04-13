@@ -8,10 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mitchellh/go-homedir"
-
 	"github.com/bingoohuang/logtail/internal/globpath"
 	"github.com/influxdata/tail"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 )
 
