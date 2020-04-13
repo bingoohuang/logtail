@@ -14,7 +14,7 @@ tail log and do something
 
 ## Usage
 
-demo [config.toml](testdata/cnf.toml)
+demo [config.toml](testdata/cnf1.toml)
 
 ```toml
 # files to tail.
@@ -36,6 +36,12 @@ Matches = ["[End]"]
 # POST URL
 PostURL  = "http://127.0.0.1:8812"
 
+# 切割分隔符
+Splitter = "^_^"
+
+# 切分后取第几个子串(1开始)
+CaptureSplitSeq = 2
+
 # 匹配正则，优先级高
 Capture  = ''''''
 # 正则匹配，捕获组序号
@@ -46,7 +52,9 @@ CaptureGroup = 0
 # 起始锚点
 AnchorStart = '''customerVerify(..)=['''
 # 终止锚点
-AnchorEnd = ''']^_^'''
+AnchorEnd = ""
+# 切除尾部1一个字符:
+CaptureCut=":-1"
 
 ```
 

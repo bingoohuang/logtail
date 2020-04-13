@@ -44,7 +44,7 @@ func main() {
 
 	gsutil.Ipo(*ipo)
 
-	cnf.LoadByPflag(&tailer, &linerPost)
+	cnf.LoadByPflag(tailer, &linerPost)
 
 	lo.SetupLog()
 

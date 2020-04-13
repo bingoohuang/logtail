@@ -6,7 +6,7 @@ require (
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61
 	github.com/bingoohuang/gonet v0.0.0-20191202012958-3500a89712c0
 	github.com/bingoohuang/gostarter v0.0.0-20200224064606-f671f29f41a2
-	github.com/bingoohuang/gou v0.0.0-20200403081909-e61e812925ed
+	github.com/bingoohuang/gou v0.0.0-20200413074013-146ecb901d5e
 	github.com/bingoohuang/statiq v0.2.1
 	github.com/gobwas/glob v0.2.3
 	github.com/influxdata/tail v1.0.1-0.20180327235535-c43482518d41
