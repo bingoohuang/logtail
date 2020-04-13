@@ -151,7 +151,7 @@ func (t *Tail) createTailer(file string, fromBeginning bool) {
 func (t *Tail) receiver(tailer *tail.Tail) {
 	firstLine := true
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(10 * time.Second) // nolint gomnd
 	defer ticker.Stop()
 
 	var lastOffset int64 = -1

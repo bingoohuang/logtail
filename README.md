@@ -1,4 +1,11 @@
 # logtail
+
+[![Travis CI](https://img.shields.io/travis/bingoohuang/logtail/master.svg?style=flat-square)](https://travis-ci.com/bingoohuang/logtail)
+[![Software License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)](https://github.com/bingoohuang/logtail/blob/master/LICENSE.md)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/bingoohuang/logtail)
+[![Coverage Status](http://codecov.io/github/bingoohuang/logtail/coverage.svg?branch=master)](http://codecov.io/github/bingoohuang/logtail?branch=master)
+[![goreport](https://www.goreportcard.com/badge/github.com/bingoohuang/logtail)](https://www.goreportcard.com/repo
+
 tail log and do something
 
 ## Build

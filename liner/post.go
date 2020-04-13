@@ -30,7 +30,7 @@ func (p *Post) Setup() error {
 		p.postURL, _ = url.Parse(p.PostURL)
 		p.urlQuery, _ = url.ParseQuery(p.postURL.RawQuery)
 		p.client = &http.Client{
-			Timeout: 60 * time.Second,
+			Timeout: 60 * time.Second, // nolint gomnd
 		}
 	} else {
 		logrus.Warnf("PostURL is blank")
