@@ -150,26 +150,39 @@ logtail started, pid=86594
 ```
 
 ```bash
-$ logtail -h
-Usage of logtail:
-      --anchorEnd string          终止锚点（在Capture为空时有效）
-      --anchorStart string        起始锚点（在Capture为空时有效）
-      --capture string            匹配正则
-      --captureGroup int          捕获组序号
-  -c, --cnf string                cnf file path
-      --files string              Files to tail
-      --fromBeginning             Read file from beginning
-  -i, --init                      init to create template config file and ctl.sh
-      --logdir string             log dir (default "var/logs")
-      --loglevel string           debug/info/warn/error (default "info")
-      --logrus                    enable logrus (default true)
-      --matches string            前置匹配（子串包含）
-      --offsetSavePrefix string   Offset save file prefix in in ~, default logtail
-      --pipe                      Whether file is a named pipe
-      --postURL string            POST URL
-  -v, --version                   show version
-      --watchMethod string        Method used to watch for file updates(inotify/poll), default inotify
-pflag: help requested
+$  logtail -h                                                                                                                                                                         [Mon Apr 13 17:17:43 2020]
+  Usage of logtail:
+        --preMatches string          预匹配(子串包含)
+        --splitter string            切分分割符
+ 
+        --captureSplitSeq int        切分后取第几个子串(1开始)
+        --captureGroup int           捕获组序号
+        --captureReg string          匹配正则表达式
+        --anchorStart string         起始锚点(在capture为空时有效)
+        --anchorEnd string           终止锚点(在capture为空时有效)
+        --captureCut string          切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1
+
+        --cmpRspAnchorEnd string     比较响应-终止锚点
+        --cmpRspAnchorStart string   比较响应-起始锚点
+        --cmpRspCaptureGroup int     比较响应-捕获组序号
+        --cmpRspCaptureReg string    比较响应-匹配正则表达式
+        --cmpRspCut string           比较响应-切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1
+        --cmpRspSplitSeq int         比较响应-切分后取第几个子串(1开始)
+        --cmdRspBadLog string        比较响应-比较失败日志文件名
+        --cmdRspOklog string         比较响应-比较通过日志文件名
+    -c, --cnf string                 cnf file path
+        --files string               Files to tail
+        --fromBeginning              Read file from beginning
+    -i, --init                       init to create template config file and ctl.sh
+        --logdir string              log dir (default "var/logs")
+        --loglevel string            debug/info/warn/error (default "info")
+        --logrus                     enable logrus (default true)
+        --offsetSavePrefix string    Offset save file prefix in in ~, default logtail
+        --pipe                       Whether file is a named pipe
+        --postUrl string             POST URL
+    -v, --version                    show version
+        --watchMethod string         Method used to watch for file updates(inotify/poll), default inotify
+  pflag: help requested
 ```
 
 

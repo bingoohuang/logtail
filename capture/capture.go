@@ -59,7 +59,7 @@ func (p *DistractConfig) setup() error {
 // Config defines the config to capture a sub string from a string
 type Config struct {
 	PreMatches []string `pflag:"预匹配(子串包含)"`
-	Splitter   string   `plag:"切分分割符"`
+	Splitter   string   `pflag:"切分分割符"`
 
 	CaptureSplitSeq int    `pflag:"切分后取第几个子串(1开始)"`
 	CaptureReg      string `pflag:"匹配正则表达式"`
