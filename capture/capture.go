@@ -15,7 +15,7 @@ import (
 type DistractConfig struct {
 	SplitSeq int
 
-	Capture      string
+	CaptureReg   string
 	CaptureGroup int
 
 	AnchorStart string
@@ -30,15 +30,15 @@ type DistractConfig struct {
 
 // IsEmpty tells whether the config is wholly empty or not.
 func (p *DistractConfig) IsEmpty() bool {
-	return p.SplitSeq == 0 && p.Capture == "" && p.AnchorStart == "" && p.AnchorEnd == ""
+	return p.SplitSeq == 0 && p.CaptureReg == "" && p.AnchorStart == "" && p.AnchorEnd == ""
 }
 
 func (p *DistractConfig) setup() error {
 	var err error
 
-	if p.Capture != "" {
-		if p.captureReg, err = regexp.Compile(p.Capture); err != nil {
-			return fmt.Errorf("compile regex %s  error %w", p.Capture, err)
+	if p.CaptureReg != "" {
+		if p.captureReg, err = regexp.Compile(p.CaptureReg); err != nil {
+			return fmt.Errorf("compile regex %s  error %w", p.CaptureReg, err)
 		}
 	}
 
@@ -58,25 +58,25 @@ func (p *DistractConfig) setup() error {
 
 // Config defines the config to capture a sub string from a string
 type Config struct {
-	Matches  []string `pflag:"前置匹配(子串包含)"`
-	Splitter string   `plag:"切分分割符"`
+	PreMatches []string `pflag:"预匹配(子串包含)"`
+	Splitter   string   `plag:"切分分割符"`
 
 	CaptureSplitSeq int    `pflag:"切分后取第几个子串(1开始)"`
-	Capture         string `pflag:"匹配正则(优先级比锚点高)"`
+	CaptureReg      string `pflag:"匹配正则表达式"`
 	CaptureGroup    int    `pflag:"捕获组序号"`
 	AnchorStart     string `pflag:"起始锚点(在capture为空时有效)"`
 	AnchorEnd       string `pflag:"终止锚点(在capture为空时有效)"`
 	CaptureCut      string `pflag:"切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1"`
 
 	CmpRspSplitSeq     int    `pflag:"比较响应-切分后取第几个子串(1开始)"`
-	CmpRspCapture      string `pflag:"比较响应-匹配正则(优先级比锚点高)"`
+	CmpRspCaptureReg   string `pflag:"比较响应-匹配正则表达式"`
 	CmpRspCaptureGroup int    `pflag:"比较响应-捕获组序号"`
-	CmpRspAnchorStart  string `pflag:"比较响应-起始锚点(在capture为空时有效)"`
-	CmpRspAnchorEnd    string `pflag:"比较响应-终止锚点(在capture为空时有效)"`
+	CmpRspAnchorStart  string `pflag:"比较响应-起始锚点"`
+	CmpRspAnchorEnd    string `pflag:"比较响应-终止锚点"`
 	CmpRspCut          string `pflag:"比较响应-切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1"`
 
-	CmdRspOKLog  string `pflag:"比较响应-比较通过日志文件"`
-	CmdRspBadLog string `pflag:"比较响应-比较失败日志文件"`
+	CmdRspOKLog  string `pflag:"比较响应-比较通过日志文件名"`
+	CmdRspBadLog string `pflag:"比较响应-比较失败日志文件名"`
 
 	capture       *DistractConfig
 	cmpRspCapture *DistractConfig
@@ -89,7 +89,7 @@ type Config struct {
 func (p *Config) Setup() error {
 	p.capture = &DistractConfig{
 		SplitSeq:     p.CaptureSplitSeq,
-		Capture:      p.Capture,
+		CaptureReg:   p.CaptureReg,
 		CaptureGroup: p.CaptureGroup,
 		AnchorStart:  p.AnchorStart,
 		AnchorEnd:    p.AnchorEnd,
@@ -106,7 +106,7 @@ func (p *Config) Setup() error {
 func (p *Config) setupCmdResult() (err error) {
 	p.cmpRspCapture = &DistractConfig{
 		SplitSeq:     p.CmpRspSplitSeq,
-		Capture:      p.CmpRspCapture,
+		CaptureReg:   p.CmpRspCaptureReg,
 		CaptureGroup: p.CmpRspCaptureGroup,
 		AnchorStart:  p.CmpRspAnchorStart,
 		AnchorEnd:    p.CmpRspAnchorEnd,
@@ -146,7 +146,7 @@ func createLog(filename string) (*log.Logger, error) {
 }
 
 func (p *Config) preMatches(s string) bool {
-	for _, m := range p.Matches {
+	for _, m := range p.PreMatches {
 		if !strings.Contains(s, m) {
 			return false
 		}
@@ -262,21 +262,23 @@ func (p *DistractConfig) cut(s string) (string, error) {
 		return s, nil
 	}
 
-	if p.cutFrom < 0 {
-		p.cutFrom += len(s)
+	from := p.cutFrom
+	if from < 0 {
+		from += len(s)
 	}
 
-	if p.cutFrom < 0 {
-		p.cutFrom = 0
+	if from < 0 {
+		from = 0
 	}
 
-	if p.cutTo <= 0 {
-		p.cutTo += len(s)
+	to := p.cutTo
+	if to <= 0 {
+		to += len(s)
 	}
 
-	if p.cutTo > len(s) {
-		p.cutTo = len(s)
+	if to > len(s) {
+		to = len(s)
 	}
 
-	return s[p.cutFrom:p.cutTo], nil
+	return s[from:to], nil
 }

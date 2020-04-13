@@ -12,6 +12,77 @@ tail log and do something
 
 `go install ./...`
 
+## 日志行提取规则
+
+1. PreMatches 预匹配，含有预匹配字符串的日志行入选
+2. Splitter 分隔符切割，如果指定了分隔符，那么先用分隔符切割
+3. CaptureSplitSeq 选取切割子串序号（从1开始）
+4. CaptureReq 如果设置了正则匹配，使用正则匹配，否则跳到6号锚定点匹配
+5. CaptureGroup 正则匹配后选取子捕获分组（默认0，表示选取正则匹配的0号分组），跳到7
+6. AnchorStart AnchorEnd 使用锚定点开始和结束匹配
+7. CaptureCut 最终修剪（如果设置了）
+
+例如：
+
+```toml
+# 预匹配(子串包含)
+PreMatches = ["[End]", "AuthService"]
+# 分隔符切割，如果指定了分隔符，那么先用分隔符切割
+Splitter = "^_^"
+# 选取切割子串序号（从1开始）
+CaptureSplitSeq = 2
+# 正则匹配
+CaptureReg   = ""
+# 正则匹配后选取子捕获分组
+CaptureGroup = 0
+# 起始锚点
+AnchorStart = "["
+# 结束锚点
+AnchorEnd  = ""
+# 最终修剪
+CaptureCut = "0:-1"
+```
+
+对于日志行：
+
+```
+2020-04-13 15:05:55,955  INFO 16376 --- [http-nio-12-exec-8] [72] c.o.MonitorLogger            : AuthService.customerVerify(..)[End]:158^_^AuthService.customerVerify(..)=[{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}]^_^{"message":"成功","status":200}^_^10^_^false
+```
+
+1. 首先预匹配发现，改行包含`[End]`和`AuthService`，所以入选
+2. 使用`^_^`分割，得到以下子串
+    1. `2020-04-13 15:05:55,955  INFO 16376 --- [http-nio-12-exec-8] [72] c.o.MonitorLogger            : AuthService.customerVerify(..)[End]:158`
+    2. `AuthService.customerVerify(..)=[{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}]`
+    3. `{"message":"成功","status":200}`
+    4. `10`
+    5. `false`
+3. 选取切割子串序号上面`2`的子串
+4. CaptureReg 正则匹配没有配置，跳过
+5. CaptureGroup 跳过
+6. AnchorStart="[",AnchorEnd=""，得到子串：`{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}]`
+7. 使用`CaptureCut = "0:-1"`修剪掉最后一个字符，得到最终字符串`{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}`
+
+## Post重放请求响应报文响应配置
+
+```toml
+# 比较响应-切分后取第几个子串(1开始)
+CmpRspSplitSeq  = 3
+# 比较响应-匹配正则表达式
+CmpRspCaptureReg  = ""
+# 比较响应-捕获组序号
+CmpRspCaptureGroup = 0
+# 比较响应-起始锚点
+CmpRspAnchorStart = ""
+# 比较响应-终止锚点
+CmpRspAnchorEnd  = ""
+# 比较响应-切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1
+CmpRspCut   = ""
+# 比较响应-比较通过日志文件名，不配置不打印
+CmdRspOKLog = "ok.log"
+# 比较响应-比较失败日志文件名，不配置，输出到stderr
+CmdRspBadLog = "bad.log"
+```
+
 ## Usage
 
 demo [config.toml](testdata/cnf1.toml)
@@ -31,8 +102,8 @@ FromBeginning = false
 # Whether file is a named pipe
 Pipe = false
 
-# 前置匹配（子串包含）
-Matches = ["[End]"]
+# 预匹配（子串包含）
+PreMatches = ["[End]"]
 # POST URL
 PostURL  = "http://127.0.0.1:8812"
 
@@ -43,7 +114,7 @@ Splitter = "^_^"
 CaptureSplitSeq = 2
 
 # 匹配正则，优先级高
-Capture  = ''''''
+CaptureReq  = ''''''
 # 正则匹配，捕获组序号
 CaptureGroup = 0
 

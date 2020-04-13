@@ -21,7 +21,7 @@ func TestCapture(t *testing.T) {
 
 	dc = &DistractConfig{
 		SplitSeq:     3,
-		Capture:      "",
+		CaptureReg:   "",
 		CaptureGroup: 0,
 		AnchorStart:  "",
 		AnchorEnd:    "",
@@ -35,7 +35,7 @@ func TestCapture(t *testing.T) {
 
 	dc = &DistractConfig{
 		SplitSeq:     2,
-		Capture:      "",
+		CaptureReg:   "",
 		CaptureGroup: 0,
 		AnchorStart:  ")=[",
 		AnchorEnd:    "]",
@@ -50,7 +50,7 @@ func TestCapture(t *testing.T) {
 
 	dc = &DistractConfig{
 		SplitSeq:     2,
-		Capture:      "",
+		CaptureReg:   "",
 		CaptureGroup: 0,
 		AnchorStart:  ")=[",
 		AnchorEnd:    "",
