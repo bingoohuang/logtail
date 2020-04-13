@@ -40,14 +40,19 @@ func (p *Post) Setup() error {
 }
 
 // ProcessLine process a line string.
-func (p Post) ProcessLine(tailer *tail.Tail, line string, firstLine bool) error {
+func (p Post) ProcessLine(_ *tail.Tail, line string, _ bool) error {
 	captured, err := p.CaptureString(line)
-	if err != nil || captured == "" {
-		logrus.Debugf("no capture for line %s error %v", line, err)
+	if err != nil {
+		logrus.Warnf("capture for line %s error %v", line, err)
 		return nil
 	}
 
-	logrus.Infof("captured %s from line %s", captured, line)
+	if captured.Captured == "" {
+		logrus.Debugf("no capture for line %s", line)
+		return nil
+	}
+
+	logrus.Infof("captured %s from line %s", captured.Captured, line)
 
 	if p.PostURL != "" {
 		p.postLine(captured)
@@ -64,7 +69,7 @@ func CloneURLValues(v url.Values) url.Values {
 	return url.Values(http.Header(v).Clone())
 }
 
-func (p Post) postLine(line string) {
+func (p Post) postLine(captured *capture.CapturedStringResult) {
 	q := CloneURLValues(p.urlQuery)
 	//q.Add("filename", filename)
 	//q.Add("firstLine", fmt.Sprintf("%v", firstLine))
@@ -72,6 +77,7 @@ func (p Post) postLine(line string) {
 	u := p.postURL
 	u.RawQuery = q.Encode()
 
+	line := captured.Captured
 	contentType := DetectContentType(line)
 	start := time.Now()
 	postURL := u.String()
@@ -84,9 +90,25 @@ func (p Post) postLine(line string) {
 	}
 
 	status := resp.Status
-	respBody := gonet.ReadString(resp.Body)
+	respBody := strings.TrimSpace(gonet.ReadString(resp.Body))
 
 	logrus.Infof("post cost: %v status: %s response: %s", time.Since(start), status, respBody)
+
+	if captured.IsCmdRespEmpty() {
+		return
+	}
+
+	cmpResp, err := captured.GetCmpResp()
+	if err != nil {
+		logrus.Infof("failed to get compared response body: %v", err)
+		return
+	}
+
+	if cmpResp == respBody {
+		p.Config.LogCmpRespOK(postURL, captured, cmpResp)
+	} else {
+		p.Config.LogCmpRespBad(postURL, captured, cmpResp, respBody)
+	}
 }
 
 // DetectContentType detects content-type of body.

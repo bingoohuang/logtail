@@ -91,6 +91,7 @@ func (t *Tail) tailNewFiles(fromBeginning bool) {
 		g, err := globpath.Compile(filepath)
 		if err != nil {
 			logrus.Errorf("Glob %q failed to compile: %s", filepath, err.Error())
+			continue
 		}
 
 		matches := g.Match()
