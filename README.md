@@ -16,7 +16,7 @@ tail log and do something
 
 使用管道处理方式：
 例如：`contains customerVerify [End] | split by=^_^ keeps=1 | anchor start=[ | cut :-1`
-表示使用grep进行匹配，然后分割后取第1(0-based)部分，然后再锚点`[`后的部分，最后裁剪掉最后一个字符。
+表示使用contains进行包含测试，然后分割后取第1(0-based)部分，然后再锚点`[`后的部分，最后裁剪掉最后一个字符。
 
 目前支持的处理器：
 
