@@ -14,74 +14,21 @@ tail log and do something
 
 ## 日志行提取规则
 
-1. PreMatches 预匹配，含有预匹配字符串的日志行入选
-2. Splitter 分隔符切割，如果指定了分隔符，那么先用分隔符切割
-3. CaptureSplitSeq 选取切割子串序号（从1开始）
-4. CaptureReq 如果设置了正则匹配，使用正则匹配，否则跳到6号锚定点匹配
-5. CaptureGroup 正则匹配后选取子捕获分组（默认0，表示选取正则匹配的0号分组），跳到7
-6. AnchorStart AnchorEnd 使用锚定点开始和结束匹配
-7. CaptureCut 最终修剪（如果设置了）
+使用管道处理方式：
+例如：`contains customerVerify [End] | split by=^_^ keeps=1 | anchor start=[ | cut :-1`
+表示使用grep进行匹配，然后分割后取第1(0-based)部分，然后再锚点`[`后的部分，最后裁剪掉最后一个字符。
 
-例如：
+目前支持的处理器：
 
-```toml
-# 预匹配(子串包含)
-PreMatches = ["[End]", "AuthService"]
-# 分隔符切割，如果指定了分隔符，那么先用分隔符切割
-Splitter = "^_^"
-# 选取切割子串序号（从1开始）
-CaptureSplitSeq = 2
-# 正则匹配
-CaptureReg   = ""
-# 正则匹配后选取子捕获分组
-CaptureGroup = 0
-# 起始锚点
-AnchorStart = "["
-# 结束锚点
-AnchorEnd  = ""
-# 最终修剪
-CaptureCut = "0:-1"
-```
+1. `contains sub1 sub2 ...` 处理行必须包含sub1,sub2
+1. `split [by={byValue}] [keeps={keepsValue}]` 按byValue切分，如果by参数没有指定，则按空白字符切分，然后保留索引值(0-based)为keepsValue的部分，例如`keeps=1`表示保留第1部分，`keeps=1,3`表示保留第1，3部分，不指定默认保留第0部分
+1. `anchor [start={startValue}] [end={endValue}] [includeStart=yes] [includeEnd=yes]` 按锚点取值，例如`anchor start={ end=}` 则表示取`{`和`}`中间的值
+1. `cut from:to` 表示切割，`cut 1:-1` 切割掉首位各1位字符
+1. `join by={byValue}` 合并
+1. `trim` 去除两端空白
+1. `reg expr [group1 group2 ...]` 使用正则提取值，指定提取组号的子匹配部分，默认提取组号为0的子匹配
+1. `grep expr1 [expr2 expr3 ...]` 处理行必须符合正则expr1, expr2, expr3 ...
 
-对于日志行：
-
-```
-2020-04-13 15:05:55,955  INFO 16376 --- [http-nio-12-exec-8] [72] c.o.MonitorLogger            : AuthService.customerVerify(..)[End]:158^_^AuthService.customerVerify(..)=[{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}]^_^{"message":"成功","status":200}^_^10^_^false
-```
-
-1. 首先预匹配发现，改行包含`[End]`和`AuthService`，所以入选
-2. 使用`^_^`分割，得到以下子串
-    1. `2020-04-13 15:05:55,955  INFO 16376 --- [http-nio-12-exec-8] [72] c.o.MonitorLogger            : AuthService.customerVerify(..)[End]:158`
-    2. `AuthService.customerVerify(..)=[{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}]`
-    3. `{"message":"成功","status":200}`
-    4. `10`
-    5. `false`
-3. 选取切割子串序号上面`2`的子串
-4. CaptureReg 正则匹配没有配置，跳过
-5. CaptureGroup 跳过
-6. AnchorStart="[",AnchorEnd=""，得到子串：`{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}]`
-7. 使用`CaptureCut = "0:-1"`修剪掉最后一个字符，得到最终字符串`{"data":"Ynzaa==","signAlgo":"HmacSHA256","appId":"61578c46","version":"1.0","deviceId":"DEV_1db8f","algo":"SHA256withRSA"}`
-
-## Post重放请求响应报文响应配置
-
-```toml
-# 比较响应-切分后取第几个子串(1开始)
-CmpRspSplitSeq  = 3
-# 比较响应-匹配正则表达式
-CmpRspCaptureReg  = ""
-# 比较响应-捕获组序号
-CmpRspCaptureGroup = 0
-# 比较响应-起始锚点
-CmpRspAnchorStart = ""
-# 比较响应-终止锚点
-CmpRspAnchorEnd  = ""
-# 比较响应-切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1
-CmpRspCut   = ""
-# 比较响应-比较通过日志文件名，不配置不打印
-CmdRspOKLog = "ok.log"
-# 比较响应-比较失败日志文件名，不配置，输出到stderr
-CmdRspBadLog = "bad.log"
-```
 
 ## Usage
 
@@ -102,31 +49,16 @@ FromBeginning = false
 # Whether file is a named pipe
 Pipe = false
 
-# 预匹配（子串包含）
-PreMatches = ["[End]"]
+# 日志行捕获表达式
+Capture = "grep customerVerify [End] | split by=^_^ keeps=1 | anchor start=[ | cut :-1"
 # POST URL
 PostURL  = "http://127.0.0.1:8812"
-
-# 切割分隔符
-Splitter = "^_^"
-
-# 切分后取第几个子串(1开始)
-CaptureSplitSeq = 2
-
-# 匹配正则，优先级高
-CaptureReq  = ''''''
-# 正则匹配，捕获组序号
-CaptureGroup = 0
-
-# 在Capture为空时，使用锚点定位
-
-# 起始锚点
-AnchorStart = '''customerVerify(..)=['''
-# 终止锚点
-AnchorEnd = ""
-# 切除尾部1一个字符:
-CaptureCut=":-1"
-
+# 期望POST返回体捕获表达式
+ExpectRsp = "split by=^_^ keeps=2"
+# 比较响应-比较通过日志文件名
+RspOKLog  = ""
+# 比较响应-比较失败日志文件名
+RspFailLog = "fail.log"
 ```
 
 Start the POST mock server
@@ -150,39 +82,29 @@ logtail started, pid=86594
 ```
 
 ```bash
-$  logtail -h                                                                                                                                                                         [Mon Apr 13 17:17:43 2020]
+$ logtail -h                                                                                                                                                                         [Tue Apr 14 09:32:34 2020]
   Usage of logtail:
-        --preMatches string          预匹配(子串包含)
-        --splitter string            切分分割符
- 
-        --captureSplitSeq int        切分后取第几个子串(1开始)
-        --captureGroup int           捕获组序号
-        --captureReg string          匹配正则表达式
-        --anchorStart string         起始锚点(在capture为空时有效)
-        --anchorEnd string           终止锚点(在capture为空时有效)
-        --captureCut string          切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1
-
-        --cmpRspAnchorEnd string     比较响应-终止锚点
-        --cmpRspAnchorStart string   比较响应-起始锚点
-        --cmpRspCaptureGroup int     比较响应-捕获组序号
-        --cmpRspCaptureReg string    比较响应-匹配正则表达式
-        --cmpRspCut string           比较响应-切割，eg: 切除首尾字符 1:-1，切除尾部1一个字符:-1
-        --cmpRspSplitSeq int         比较响应-切分后取第几个子串(1开始)
-        --cmdRspBadLog string        比较响应-比较失败日志文件名
-        --cmdRspOklog string         比较响应-比较通过日志文件名
-    -c, --cnf string                 cnf file path
-        --files string               Files to tail
-        --fromBeginning              Read file from beginning
-    -i, --init                       init to create template config file and ctl.sh
-        --logdir string              log dir (default "var/logs")
-        --loglevel string            debug/info/warn/error (default "info")
-        --logrus                     enable logrus (default true)
-        --offsetSavePrefix string    Offset save file prefix in in ~, default logtail
-        --pipe                       Whether file is a named pipe
-        --postUrl string             POST URL
-    -v, --version                    show version
-        --watchMethod string         Method used to watch for file updates(inotify/poll), default inotify
+        --capture string            捕获表达式
+    -c, --cnf string                cnf file path
+        --expectRsp string          期待响应表达式
+        --files string              Files to tail
+        --fromBeginning             Read file from beginning
+    -i, --init                      init to create template config file and ctl.sh
+        --logdir string             log dir (default "var/logs")
+        --loglevel string           debug/info/warn/error (default "info")
+        --logrus                    enable logrus (default true)
+        --offsetSavePrefix string   Offset save file prefix in in ~, default logtail
+        --pipe                      Whether file is a named pipe
+        --postUrl string            POST URL
+        --rspFailLog string         比较响应-比较失败日志文件名
+        --rspOklog string           比较响应-比较通过日志文件名
+    -v, --version                   show version
+        --watchMethod string        Method used to watch for file updates(inotify/poll), default inotify
   pflag: help requested
+```
+
+```bash
+logtail --files ./MSSM-Auth.log --fromBeginning=true --logrus=false --capture="contains customerVerify [End] | split by=^_^ keeps=1 | anchor start=[ | cut :-1"
 ```
 
 

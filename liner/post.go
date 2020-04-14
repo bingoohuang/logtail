@@ -41,13 +41,8 @@ func (p *Post) Setup() error {
 
 // ProcessLine process a line string.
 func (p Post) ProcessLine(_ *tail.Tail, line string, _ bool) error {
-	captured, err := p.CaptureString(line)
-	if err != nil {
-		logrus.Debugf("try capture for line %s error %v", line, err)
-		return nil
-	}
-
-	if captured.Captured == "" {
+	captured := p.CaptureString(line)
+	if captured == nil || captured.Captured == "" {
 		logrus.Debugf("non capture for line %s", line)
 		return nil
 	}
@@ -98,11 +93,7 @@ func (p Post) postLine(captured *capture.CapturedStringResult) {
 		return
 	}
 
-	cmpResp, err := captured.GetCmpResp()
-	if err != nil {
-		logrus.Infof("failed to get compared response body: %v", err)
-		return
-	}
+	cmpResp := captured.GetCmpResp(line)
 
 	if cmpResp == respBody {
 		p.Config.LogCmpRespOK(postURL, captured, cmpResp)

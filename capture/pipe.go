@@ -8,16 +8,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Filter defines the filter interface for string filtering.
-type Filter interface {
-	// Filter returns filtered string slice or error.
+// Pipe defines the filter interface for string filtering.
+type Pipe interface {
+	// Pipe returns filtered string slice or error.
 	Filter(strs []string) []string
 }
 
 // ParseFilters parses the filters expression to a filter object.
-func ParseFilters(s string) Filter {
+func ParseFilters(s string) Pipe {
 	filterExprs := str.SplitN(s, "|", true, true)
-	filters := make([]Filter, 0, len(filterExprs))
+	filters := make([]Pipe, 0, len(filterExprs))
 
 	for _, f := range filterExprs {
 		fs := str.Fields(f, 2)
@@ -29,15 +29,22 @@ func ParseFilters(s string) Filter {
 		}
 
 		if filterFactory, ok := filtersMap[name]; ok {
-			filters = append(filters, filterFactory(value))
+			filter := filterFactory(value)
+			if filter != nil {
+				filters = append(filters, filter)
+			}
 		}
+	}
+
+	if len(filters) == 0 {
+		return nil
 	}
 
 	return &Filters{Filters: filters}
 }
 
 type Filters struct {
-	Filters []Filter
+	Filters []Pipe
 }
 
 func (s Filters) Filter(strs []string) []string {
@@ -50,10 +57,51 @@ func (s Filters) Filter(strs []string) []string {
 	return out
 }
 
-type FilterFactory func(expr string) Filter
+type FilterFactory func(expr string) Pipe
 
 // nolint gochecknoinits
 var filtersMap = make(map[string]FilterFactory)
+
+type Contains struct {
+	Subs []string
+}
+
+func (c Contains) Filter(strs []string) []string {
+	for _, i := range strs {
+		if c.matches(i) {
+			return strs
+		}
+	}
+
+	return []string{}
+}
+
+func (c Contains) matches(str string) bool {
+	for _, sub := range c.Subs {
+		if strings.Contains(str, sub) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// nolint gochecknoinits
+func init() {
+	filtersMap["contains"] = func(expr string) Pipe {
+		subs := make([]string, 0)
+
+		for _, sub := range strings.Fields(expr) {
+			subs = append(subs, sub)
+		}
+
+		if len(subs) == 0 {
+			return nil
+		}
+
+		return &Contains{Subs: subs}
+	}
+}
 
 type Grep struct {
 	Exprs []*regexp.Regexp
@@ -61,7 +109,7 @@ type Grep struct {
 
 // nolint gochecknoinits
 func init() {
-	filtersMap["grep"] = func(expr string) Filter {
+	filtersMap["grep"] = func(expr string) Pipe {
 		exprs := make([]*regexp.Regexp, 0)
 
 		for _, sub := range strings.Fields(expr) {
@@ -108,7 +156,7 @@ type Reg struct {
 
 // nolint gochecknoinits
 func init() {
-	filtersMap["regex"] = func(expr string) Filter {
+	filtersMap["reg"] = func(expr string) Pipe {
 		fields := strings.Fields(expr)
 		if len(fields) == 0 {
 			return nil
@@ -160,7 +208,7 @@ type Trim struct{}
 
 // nolint gochecknoinits
 func init() {
-	filtersMap["trim"] = func(expr string) Filter {
+	filtersMap["trim"] = func(expr string) Pipe {
 		return &Trim{}
 	}
 }
@@ -187,14 +235,14 @@ type Anchor struct {
 
 // nolint gochecknoinits
 func init() {
-	filtersMap["anchor"] = func(expr string) Filter {
+	filtersMap["anchor"] = func(expr string) Pipe {
 		props := parseProps(strings.Fields(expr))
 
 		return &Anchor{
 			Start:        props["start"],
 			End:          props["end"],
-			IncludeStart: parseBool(props["include_start"]),
-			IncludeEnd:   parseBool(props["include_end"]),
+			IncludeStart: parseBool(props["includeStart"]),
+			IncludeEnd:   parseBool(props["includeEnd"]),
 		}
 	}
 }
@@ -246,7 +294,7 @@ func (s Anchor) capture(str string) string {
 	}
 
 	if s.End != "" {
-		pos := strings.Index(str, s.End)
+		pos := strings.LastIndex(str, s.End)
 		if pos < 0 {
 			return ""
 		}
@@ -261,6 +309,23 @@ func (s Anchor) capture(str string) string {
 	return str
 }
 
+type Join struct {
+	By string
+}
+
+func (j Join) Filter(strs []string) []string {
+	return []string{strings.Join(strs, j.By)}
+}
+
+// nolint gochecknoinits
+func init() {
+	filtersMap["join"] = func(expr string) Pipe {
+		props := parseProps(strings.Fields(expr))
+
+		return &Join{By: props["by"]}
+	}
+}
+
 type Split struct {
 	By    string
 	N     string
@@ -269,7 +334,7 @@ type Split struct {
 
 // nolint gochecknoinits
 func init() {
-	filtersMap["split"] = func(expr string) Filter {
+	filtersMap["split"] = func(expr string) Pipe {
 		props := parseProps(strings.Fields(expr))
 
 		return &Split{
@@ -327,7 +392,7 @@ type Cutter struct {
 
 // nolint gomnd
 func init() {
-	filtersMap["cut"] = func(expr string) Filter {
+	filtersMap["cut"] = func(expr string) Pipe {
 		fs := strings.SplitN(expr, ":", 2)
 		start, end := "", ""
 
